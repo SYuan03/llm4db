@@ -70,7 +70,7 @@ def chain_tongyi(db_info):
     # 打印下完整的prompt
     # print(chain.get_prompts()[0].pretty_print())
 
-    res = chain.invoke({"question": "谁是ChrisDing?"})
+    res = chain.invoke({"question": "今天最受欢迎的仓库是？"})
     print(res)
 
 
