@@ -10,7 +10,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 
-from config import DASHSCOPE_API_KEY, HOST, NAME, USER, PASSWORD, SYSTEM_TEMPLATE
+from config import DASHSCOPE_API_KEY, HOST, NAME, USER, PASSWORD, SYSTEM_TEMPLATE, EXAMPLES, PREFIX
 
 
 def print_and_pass_through(value, label):
@@ -50,7 +50,18 @@ def chain_tongyi(db_info):
          ("user", user_template)]
     )
 
-    write_query = create_sql_query_chain(llm=llm, db=db)
+    from langchain_core.prompts import FewShotPromptTemplate, PromptTemplate
+
+    example_prompt = PromptTemplate.from_template("User input: {input}\nSQL query: {query}")
+    prompt = FewShotPromptTemplate(
+        examples=EXAMPLES,
+        example_prompt=example_prompt,
+        prefix=PREFIX,
+        suffix="User input: {input}\nSQL query: ",
+        input_variables=["input", "top_k", "table_info"],
+    )
+
+    write_query = create_sql_query_chain(llm=llm, db=db, prompt=prompt)
     # 创建SQL查询工具
     execute_query = QuerySQLDataBaseTool(db=db)
 
@@ -64,14 +75,11 @@ def chain_tongyi(db_info):
             | answer
     )
     # 打印下完整的prompt
-    # prompts = answer_prompt.get_prompts()
+    # prompts = chain.get_prompts()
     # print(prompts)
 
-    # res = chain.invoke({"question": "最近五天分别是哪个领域热门程度高?"})
-    # print(res)
-
-    # 打印下数据库信息
-    print(db.get_table_info())
+    res = chain.invoke({"question": "哪些用户的followers比较多？", "top_k": 3})
+    print(res)
 
 
 if __name__ == "__main__":
