@@ -7,10 +7,10 @@ from langchain_community.llms import Tongyi
 from langchain_community.tools import QuerySQLDataBaseTool
 from langchain_community.utilities import SQLDatabase
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 
-from config import DASHSCOPE_API_KEY, HOST, NAME, USER, PASSWORD
+from config import DASHSCOPE_API_KEY, HOST, NAME, USER, PASSWORD, SYSTEM_TEMPLATE
 
 
 def chain_tongyi(db_info):
@@ -30,18 +30,32 @@ def chain_tongyi(db_info):
 
     llm = Tongyi(model='qwen-max', temperature=0)
 
-    # 定义回答问题的模板，把前面的问题、查询和结果传给LLM，然后解析输出
-    answer_prompt = PromptTemplate.from_template(
-        """
-        根据以下用户问题、对应的SQL查询以及SQL查询结果，回答用户的问题。
-        问题: {question}
-        SQL 查询: {query}
-        SQL 查询结果: {result}
-        答案:
-        """
+    user_template = """
+    请你根据以下问题、对应的SQL查询以及SQL查询结果，回答我的问题。
+    问题: {question}
+    SQL 查询: {query}
+    SQL 查询结果: {result}
+    答案:
+    """
+
+    system_template = SYSTEM_TEMPLATE
+
+    answer_prompt = ChatPromptTemplate.from_messages(
+        [("system", system_template), ("user", user_template)]
     )
-    # 创建SQL查询链
-    write_query = create_sql_query_chain(llm, db)
+
+    # 定义回答问题的模板，把前面的问题、查询和结果传给LLM，然后解析输出
+    # answer_prompt = PromptTemplate.from_template(
+    #     """
+    #     请你根据以下问题、对应的SQL查询以及SQL查询结果，回答我的问题。
+    #     问题: {question}
+    #     SQL 查询: {query}
+    #     SQL 查询结果: {result}
+    #     答案:
+    #     """
+    # )
+    # 创建SQL查询链，langchain背后默认的工作会把表结构等信息传给LLM
+    write_query = create_sql_query_chain(llm=llm, db=db)
     # 创建SQL查询工具
     execute_query = QuerySQLDataBaseTool(db=db)
 
@@ -54,9 +68,9 @@ def chain_tongyi(db_info):
             | answer
     )
     # 打印下完整的prompt
-    print(chain.prompt)
+    # print(chain.get_prompts()[0].pretty_print())
 
-    res = chain.invoke({"question": "2024年6月9号新增的仓库中哪个仓库的stars最多？是多少？仓库有homepage嘛"})
+    res = chain.invoke({"question": "谁是ChrisDing?"})
     print(res)
 
 
