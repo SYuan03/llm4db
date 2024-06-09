@@ -9,7 +9,7 @@ from langchain_community.utilities import SQLDatabase
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
-
+from langchain_core.prompts import FewShotPromptTemplate, PromptTemplate
 from config import DASHSCOPE_API_KEY, HOST, NAME, USER, PASSWORD, SYSTEM_TEMPLATE, EXAMPLES, PREFIX
 
 
@@ -49,8 +49,6 @@ def chain_tongyi(db_info):
         [("system", system_template),
          ("user", user_template)]
     )
-
-    from langchain_core.prompts import FewShotPromptTemplate, PromptTemplate
 
     example_prompt = PromptTemplate.from_template("User input: {input}\nSQL query: {query}")
     prompt = FewShotPromptTemplate(
