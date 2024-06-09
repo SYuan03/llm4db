@@ -38,7 +38,7 @@ uri = f"mysql+pymysql://{user}:{passwd}@{host}:3306/{name}"
 db = SQLDatabase.from_uri(uri)
 llm = Tongyi(model='qwen-max-longcontext', temperature=0)
 user_template = """
-请你根据以下问题、对应的SQL查询以及SQL查询结果，回答我的问题，你的回答尽可能详细和长一点。
+请你根据以下问题、对应的SQL查询以及SQL查询结果，回答我的问题，如果不是特定的问题，你的回答尽可能详细一点。
 问题: {question}
 SQL 查询: {query}
 SQL 查询结果: {result}
