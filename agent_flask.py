@@ -1,5 +1,6 @@
 import logging
 import os
+from logging.handlers import RotatingFileHandler
 from operator import itemgetter
 from urllib.parse import quote_plus
 
@@ -38,7 +39,7 @@ uri = f"mysql+pymysql://{user}:{passwd}@{host}:3306/{name}"
 db = SQLDatabase.from_uri(uri)
 llm = Tongyi(model='qwen-max-longcontext', temperature=0)
 user_template = """
-请你根据以下问题、对应的SQL查询以及SQL查询结果，回答我的问题，如果不是特定的问题，你的回答尽可能详细一点。
+请你根据以下问题、对应的SQL查询以及SQL查询结果，回答我的问题，如果不是特定的问题，你的回答要尽可能详细一点。
 问题: {question}
 SQL 查询: {query}
 SQL 查询结果: {result}
@@ -111,9 +112,17 @@ def chat_stream():
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
 
+def setup_logger():
+    handler = RotatingFileHandler('llm4db.log', maxBytes=10000, backupCount=1)
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    handler.setFormatter(formatter)
+    app.logger.addHandler(handler)
+    app.logger.setLevel(logging.INFO)
+
+
 if __name__ == '__main__':
     # 使用debug
-    app.logger.setLevel(logging.DEBUG)
-    app.run("0.0.0.0", port=5001, debug=True)
-    # app.run("0.0.0.0", port=5001)
-
+    setup_logger()
+    app.run("0.0.0.0", port=5003)
+    # app.run("0.0.0.0", port=5003)
